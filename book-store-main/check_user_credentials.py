@@ -7,6 +7,7 @@ def check_user_credentials(username, password):
         cursor = conn.cursor()
 
         # Query to find user by username and password
+        # fix
         cursor.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password))
         user = cursor.fetchone()  # Fetch the first result
 
