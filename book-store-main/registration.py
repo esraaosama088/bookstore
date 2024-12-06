@@ -1,132 +1,328 @@
 import tkinter as tk
-from tkinter import messagebox
 from PIL import Image, ImageTk
-import sqlite3
 
-# Function to create the SQLite database and table
-def create_database():
-    conn = sqlite3.connect("user_data.db")
-    cursor = conn.cursor()
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT,
-        email TEXT
-    )
-    """)
-    conn.commit()
-    conn.close()
+from setting import show_page , show_settings_page
+#from cart_page import show_cart_page
+from cart_page import *
 
-# Function to check if a user already exists in the database
-def user_exists(username):
-    conn = sqlite3.connect("user_data.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM settings WHERE username = ?", (username,))
-    exists = cursor.fetchone() is not None
-    conn.close()
-    return exists
+from create_management_page import create_management_page
 
-# Function to insert user data into the database
-def insert_user(username, password, email):
-    conn = sqlite3.connect("user_data.db")
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO settings (username, password, email) VALUES (?, ?, ?)", (username, password, email))
-    conn.commit()
-    conn.close()
-
-# Function to check user credentials during sign-in
-def check_user_credentials(username, password):
-    conn = sqlite3.connect("user_data.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM settings WHERE username = ? AND password = ?", (username, password))
-    valid = cursor.fetchone() is not None
-    conn.close()
-    return valid
-
-# Function to fetch user data
-def get_user_data():
-    conn = sqlite3.connect("user_data.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM settings WHERE id = 1")  # Assuming user ID is 1
-    user = cursor.fetchone()
-    conn.close()
-    return user
-
-# Function to update user data in the database
-def update_user_in_database(new_email, new_password):
-    conn = sqlite3.connect("user_data.db")
-    cursor = conn.cursor()
-    try:
-        cursor.execute("UPDATE settings SET email = ?, password = ? WHERE id = ?", 
-                       (new_email, new_password, 1))  # Assuming user ID is 1
-        conn.commit()
-        return True
-    except Exception as e:
-        print(f"An error occurred while updating: {e}")
-        return False
-    finally:
-        conn.close()
+# Global variable to track the current window
+current_window = None
 
 # Function to center the window
-def center_window(window, width, height):
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    x = (screen_width // 2) - (width // 2)
-    y = (screen_height // 2) - (height // 2)
-    window.geometry(f"{width}x{height}+{x}+{y}")
+from center_window import center_window
 
-# Function to show profile page and allow updates
-def show_profile_page(main_frame):
-    for widget in main_frame.winfo_children():
-        widget.destroy()
+# Function to create the SQLite database and table
+from create_database import create_database
 
-    profile_frame = tk.Frame(main_frame, bg="#FAF9F6")
-    profile_frame.pack(fill="both", expand=True, padx=20, pady=20)
+# Assuming `get_balance` is already defined
+from get_balance import get_balance
 
-    tk.Label(profile_frame, text="Profile", font=("Arial", 24, "bold"), bg="#FAF9F6").pack(pady=(10, 20))
+# Function to check if a user already exists in the database
+from user_exists import user_exists
 
-    user_data = get_user_data()  # Fetch user data from database
-    username = user_data[1]  # Assuming index 1 is username
-    email = user_data[3]      # Assuming index 3 is email
+# Function to show profile page
+from show_profile_page import show_profile_page
 
-    tk.Label(profile_frame, text="Username:", font=("Arial", 14), bg="#FAF9F6").pack(anchor="w")
-    username_label = tk.Label(profile_frame, text=username, font=("Arial", 12), bg="#FAF9F6")
-    username_label.pack(anchor="w", padx=10)
+# Function to insert user data into the database
+from insert_user import insert_user
 
-    tk.Label(profile_frame, text="Email:", font=("Arial", 14), bg="#FAF9F6").pack(anchor="w")
-    email_var = tk.StringVar(value=email)
-    email_entry = tk.Entry(profile_frame, textvariable=email_var, font=("Arial", 12), bg="#FFFFFF")
-    email_entry.pack(anchor="w", padx=10)
+# Function to check user credentials during sign-in
+from check_user_credentials import check_user_credentials,check_admin_credentials
 
-    tk.Label(profile_frame, text="New Password:", font=("Arial", 14), bg="#FAF9F6").pack(anchor="w")
-    new_password_var = tk.StringVar()
-    new_password_entry = tk.Entry(profile_frame, textvariable=new_password_var, show="*", font=("Arial", 12), bg="#FFFFFF")
-    new_password_entry.pack(anchor="w", padx=10)
+from show_home_page import show_home_page
+from populate_books import populate_books
 
-    def save_changes():
-        new_email = email_var.get()
-        new_password = new_password_var.get()
+# Function to navigate to the main app
+def open_main_app():
+    global current_window
+    
+    try:
+        if current_window == 'sign_in':
+            sign_in_window.destroy()  # Destroy Sign In window
+        elif current_window == 'sign_up':
+            sign_up_window.destroy()  # Destroy Sign Up window
+        elif current_window == 'admin_sign_in':
+            admin_sign_in_window.destroy()  # Destroy Admin Sign In window
+        elif current_window == 'user_sign_in':
+            user_sign_in_window.destroy()  # Destroy User Sign In window
+        
+        create_main_app()  # Open the main app
+    except Exception as e:
+        print(f"Error in open_main_app: {e}")
 
-        # Check if the new email is valid and if the password meets criteria
-        if not new_email:
-            messagebox.showerror("Error", "Email cannot be empty.")
-            return
-        if len(new_password) < 6:
-            messagebox.showerror("Error", "Password must be at least 6 characters long.")
-            return
+# Function to handle Admin Sign In
+def admin_sign_in():
+    global current_window
+    try:
+        sign_in_window.destroy()  # Close the previous window
+        global admin_sign_in_window
+        admin_sign_in_window = tk.Tk()
+        admin_sign_in_window.title("Admin Sign In")
+        admin_sign_in_window.configure(bg="#FAF9F6")
 
-        # Update the user data in the database
-        if update_user_in_database(new_email, new_password):
-            messagebox.showinfo("Success", "Profile updated successfully!")
-        else:
-            messagebox.showerror("Error", "Failed to update profile.")
+        tk.Label(admin_sign_in_window, text="Admin Sign In", font=("Arial", 18, "bold"), bg="#FAF9F6").pack(pady=20)
 
-    save_btn = tk.Button(profile_frame, text="Save Changes", font=("Arial", 14), bg="#4CAF50", fg="white",
-                         command=save_changes)
-    save_btn.pack(pady=20)
+        tk.Label(admin_sign_in_window, text="Username", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
+        admin_username_entry = tk.Entry(admin_sign_in_window, font=("Arial", 12), width=30)
+        admin_username_entry.pack(pady=5)
 
-# Function to create the main app
+        tk.Label(admin_sign_in_window, text="Password", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
+        admin_password_entry = tk.Entry(admin_sign_in_window, font=("Arial", 12), width=30, show="*")
+        admin_password_entry.pack(pady=5)
+
+        tk.Label(admin_sign_in_window, text="Admin Key", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
+        admin_key_entry = tk.Entry(admin_sign_in_window, font=("Arial", 12), width=30)
+        admin_key_entry.pack(pady=5)
+
+        def handle_admin_sign_in():
+            username = admin_username_entry.get()
+            password = admin_password_entry.get()
+            admin_key = admin_key_entry.get()
+
+            if check_admin_credentials(username,password,admin_key):
+                print("Admin Sign In successful")
+                admin_sign_in_window.destroy()
+                create_management_page()
+            else:
+                print("Invalid username or password. Try again.")
+                messagebox.showerror("error","Invalid credentials. Try again.")
+
+        sign_in_btn = tk.Button(admin_sign_in_window, text="Sign In", font=("Arial", 12), bg="#FF5722", fg="white", width=20, command=handle_admin_sign_in)
+        sign_in_btn.pack(pady=20)
+
+        current_window = 'admin_sign_in'
+
+        # Center the window
+        center_window(admin_sign_in_window, 400, 400)
+
+        admin_sign_in_window.mainloop()
+
+    except Exception as e:
+        print(f"Error in admin_sign_in: {e}")
+
+# Function to handle User Sign In
+def user_sign_in():
+    global current_window
+    try:
+        sign_in_window.destroy()  # Close the previous window
+        global user_sign_in_window
+        user_sign_in_window = tk.Tk()
+        user_sign_in_window.title("User Sign In")
+        user_sign_in_window.configure(bg="#FAF9F6")
+
+        tk.Label(user_sign_in_window, text="User Sign In", font=("Arial", 18, "bold"), bg="#FAF9F6").pack(pady=20)
+
+        tk.Label(user_sign_in_window, text="Username", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
+        user_username_entry = tk.Entry(user_sign_in_window, font=("Arial", 12), width=30)
+        user_username_entry.pack(pady=5)
+
+        tk.Label(user_sign_in_window, text="Password", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
+        user_password_entry = tk.Entry(user_sign_in_window, font=("Arial", 12), width=30, show="*")
+        user_password_entry.pack(pady=5)
+
+        def handle_user_sign_in():
+            username = user_username_entry.get()
+            password = user_password_entry.get()
+
+            # Check if the entered credentials match the ones in the database
+            if check_user_credentials(username, password):
+                print("User Sign In successful")
+                open_main_app()
+            else:
+                messagebox.showerror("error","Invalid username or password. Try again.")
+                print("Invalid credentials. Try again.")
+                
+
+        sign_in_btn = tk.Button(user_sign_in_window, text="Sign In", font=("Arial", 12), bg="#FF5722", fg="white", width=20, command=handle_user_sign_in)
+        sign_in_btn.pack(pady=20)
+
+        current_window = 'user_sign_in'
+
+        # Center the window
+        center_window(user_sign_in_window, 400, 400)
+
+        user_sign_in_window.mainloop()
+
+    except Exception as e:
+        print(f"Error in user_sign_in: {e}")
+
+# Function for Sign In page with Admin/User options
+def open_sign_in():
+    global current_window
+    try:
+        reg_window.destroy()  # Close the main registration window
+        global sign_in_window
+        sign_in_window = tk.Tk()
+        sign_in_window.title("Sign In")
+        sign_in_window.configure(bg="#FAF9F6")
+
+        tk.Label(sign_in_window, text="Sign In", font=("Arial", 18, "bold"), bg="#FAF9F6").pack(pady=20)
+
+        tk.Button(sign_in_window, text="Admin", font=("Arial", 12), bg="#FF5722", fg="white", width=20, command=admin_sign_in).pack(pady=20)
+        tk.Button(sign_in_window, text="User", font=("Arial", 12), bg="#4CAF50", fg="white", width=20, command=user_sign_in).pack(pady=20)
+
+        current_window = 'sign_in'
+
+        # Center the window
+        center_window(sign_in_window, 400, 300)
+
+        sign_in_window.mainloop()
+
+    except Exception as e:
+        print(f"Error in open_sign_in: {e}")
+
+# Function for Sign Up page
+def open_sign_up():
+    global current_window
+    try:
+        reg_window.destroy()  # Close the main registration window
+        global sign_up_window
+        sign_up_window = tk.Tk()
+        sign_up_window.title("Sign Up")
+        sign_up_window.configure(bg="#FAF9F6")
+
+        tk.Label(sign_up_window, text="Sign Up", font=("Arial", 18, "bold"), bg="#FAF9F6").pack(pady=20)
+
+        tk.Label(sign_up_window, text="New Username", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
+        new_username_entry = tk.Entry(sign_up_window, font=("Arial", 12), width=30)
+        new_username_entry.pack(pady=5)
+
+        tk.Label(sign_up_window, text="New Password", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
+        new_password_entry = tk.Entry(sign_up_window, font=("Arial", 12), width=30, show="*")
+        new_password_entry.pack(pady=5)
+
+        def handle_sign_up():
+            new_username = new_username_entry.get()
+            new_password = new_password_entry.get()
+            if(len(new_username)<6):
+                if(new_username==""):
+                    messagebox.showerror("error","username can't be empty")
+                else:
+                    messagebox.showerror("error","username can't be less than 6 characters")
+            elif(len(new_password)<6):
+                if(new_password==""):
+                    messagebox.showerror("error","password can't be empty")
+                else :
+                    messagebox.showerror("error","password can't be less than 6 characters")
+            else:
+                if user_exists(new_username):
+                    print("Username already exists. Please choose a different username.")
+                else:
+                # Insert the new user data into the database
+                    insert_user(new_username, new_password)
+                    open_main_app()
+            # Check if the username already exists
+        sign_up_btn = tk.Button(sign_up_window, text="Sign Up", font=("Arial", 12), bg="#2196F3", fg="white", width=20, command=handle_sign_up)
+        sign_up_btn.pack(pady=20)
+
+        current_window = 'sign_up'
+
+        # Center the window
+        center_window(sign_up_window, 400, 400)
+
+        sign_up_window.mainloop()
+
+    except Exception as e:
+        print(f"Error in open_sign_up: {e}")
+
+# Main registration screen with options
+def create_registration_screen():
+    global reg_window
+    try:
+        reg_window = tk.Tk()
+        reg_window.title("Book Store - Registration")
+        reg_window.configure(bg="#FAF9F6")
+        icon = tk.PhotoImage(file = "books-piled-.png")
+        reg_window.iconphoto(True,icon)
+
+        tk.Label(reg_window, text="Welcome To Our Book Store", font=("Arial", 18, "bold"), bg="#FAF9F6").pack(pady=20)
+
+        sign_in_btn = tk.Button(reg_window, text="Sign In", font=("Arial", 12), bg="#4CAF50", fg="white", width=20, command=open_sign_in)
+        sign_in_btn.pack(pady=20)
+
+        sign_up_btn = tk.Button(reg_window, text="Sign Up", font=("Arial", 12), bg="#2196F3", fg="white", width=20, command=open_sign_up)
+        sign_up_btn.pack(pady=20)
+
+        # Center the window
+        center_window(reg_window, 400, 300)
+
+        reg_window.mainloop()
+    except Exception as e:
+        print(f"Error in create_registration_screen: {e}")
+        
+#####################
+def log_out():
+    root.destroy()  # Close the main app window
+    from registration import create_registration_screen
+    create_registration_screen()  # Open the registration screen
+
+def show_book_details(book):
+    """Show a popup window with the book's details."""
+    book_window = tk.Toplevel(root)
+    book_window.title(f"{book['title']} Details")
+    book_window.geometry("400x300")
+    book_window.configure(bg="#FAF9F6")
+
+    # Book Title
+    tk.Label(book_window, text=book['title'], font=("Arial", 16, "bold"), bg="#FAF9F6").pack(pady=10)
+
+    # Book Author
+    tk.Label(book_window, text=f"Author: {book['author']}", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
+
+    # Book Rating
+    tk.Label(book_window, text=f"Rating: {'⭐' * book['rating']}", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
+
+    # Book Image
+    try:
+        book_img = Image.open(book['image']).resize((150, 150))
+        book_img_tk = ImageTk.PhotoImage(book_img)
+        book_img_label = tk.Label(book_window, image=book_img_tk, bg="#FAF9F6")
+        book_img_label.image = book_img_tk  # Keep a reference to avoid garbage collection
+        book_img_label.pack(pady=10)
+    except Exception as e:
+        tk.Label(book_window, text="Image Not Found", font=("Arial", 12), bg="#FAF9F6", fg="red").pack(pady=10)
+
+    # Close Button
+    tk.Button(book_window, text="Close", font=("Arial", 12), bg="red", fg="white", command=book_window.destroy).pack(pady=20)
+
+
+def populate_books(parent_frame, books, row_start=0, section_title="Books"):
+    """Populate books in the parent frame with a clickable button for details."""
+    tk.Label(parent_frame, text=section_title, font=("Arial", 14, "bold"), bg="#FAF9F6").grid(
+        row=row_start, column=0, columnspan=4, pady=10
+    )
+    for idx, book in enumerate(books):
+        col = idx % 4  # Arrange books in 4 columns
+        row = row_start + 1 + (idx // 4)
+
+        # Book Frame
+        book_frame = tk.Frame(parent_frame, bg="#FFFFFF", bd=2, relief="groove")
+        book_frame.grid(row=row, column=col, padx=10, pady=10)
+
+        # Book Image
+        try:
+            book_img = Image.open(book['image']).resize((80, 100))
+            book_img_tk = ImageTk.PhotoImage(book_img)
+            book_img_label = tk.Label(book_frame, image=book_img_tk, bg="#FFFFFF")
+            book_img_label.image = book_img_tk  # Keep a reference to avoid garbage collection
+            book_img_label.pack(pady=5)
+        except Exception as e:
+            tk.Label(book_frame, text="Image\nNot Found", font=("Arial", 10), bg="#FFFFFF", fg="red").pack(pady=5)
+
+        # Book Button
+        book_btn = tk.Button(
+            book_frame,
+            text="Details",
+            font=("Arial", 10),
+            bg="#4CAF50",
+            fg="white",
+            command=lambda b=book: show_book_details(b),  # Pass the book data to the function
+        )
+        book_btn.pack(pady=5)
+
+
 def create_main_app():
     global root
     root = tk.Tk()
@@ -176,118 +372,32 @@ def create_main_app():
             anchor="w",
             relief="flat",
             padx=20,
-            activebackground='#FCE6C9',
-            command=lambda name=item["name"]: show_profile_page(main_frame) if name == "Profile" else None
+            activebackground="#FCE6C9",
         )
         btn.image = icon_tk  # Keep a reference to prevent garbage collection
         btn.pack(fill="x", pady=5)
 
+    # Main Content
+    popular_books = [
+        {"title": "It Starts with Us", "author": "Colleen Hoover", "rating": 4, "image": "books-piled-.png"},
+        {"title": "Fairy Tale", "author": "Stephen King", "rating": 5, "image": "books-piled-.png"},
+        {"title": "The Thursday Murder Club", "author": "Richard Osman", "rating": 4, "image": "books-piled-.png"},
+        {"title": "Normal People", "author": "Sally Rooney", "rating": 3, "image": "books-piled-.png"},
+        {"title": "Atomic Habits", "author": "James Clear", "rating": 5, "image": "books-piled-.png"},
+    ]
+    recommended_books = [
+        {"title": "Book A", "author": "Author A", "rating": 5, "image": "books-piled-.png"},
+        {"title": "Book B", "author": "Author B", "rating": 4, "image": "books-piled-.png"},
+    ]
+    content_frame = tk.Frame(main_frame, bg="#FAF9F6")
+    content_frame.pack(fill="both", expand=True)
+    populate_books(content_frame, popular_books, row_start=0, section_title="Popular")
+    populate_books(content_frame, recommended_books, row_start=3, section_title="We Recommend")
+
     root.mainloop()
-
-# Function to log out and return to registration screen
-def log_out():
-    root.destroy()  # Close the main app window
-    create_registration_screen()  # Open the registration screen
-
-# Function for Sign Up page
-def open_sign_up():
-    global sign_up_window
-    sign_up_window = tk.Tk()
-    sign_up_window.title("Sign Up")
-    sign_up_window.configure(bg="#FAF9F6")
-
-    tk.Label(sign_up_window, text="Sign Up", font=("Arial", 18, "bold"), bg="#FAF9F6").pack(pady=20)
-
-    tk.Label(sign_up_window, text="New Username", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
-    new_username_entry = tk.Entry(sign_up_window, font=("Arial", 12), width=30)
-    new_username_entry.pack(pady=5)
-
-    tk.Label(sign_up_window, text="New Password", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
-    new_password_entry = tk.Entry(sign_up_window, font=("Arial", 12), width=30, show="*")
-    new_password_entry.pack(pady=5)
-
-    tk.Label(sign_up_window, text="Email", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
-    new_email_entry = tk.Entry(sign_up_window, font=("Arial", 12), width=30)
-    new_email_entry.pack(pady=5)
-
-    def handle_sign_up():
-        new_username = new_username_entry.get()
-        new_password = new_password_entry.get()
-        new_email = new_email_entry.get()
-
-        if len(new_username) < 6:
-            messagebox.showerror("Error", "Username must be at least 6 characters long.")
-        elif len(new_password) < 6:
-            messagebox.showerror("Error", "Password must be at least 6 characters long.")
-        elif user_exists(new_username):
-            messagebox.showerror("Error", "Username already exists. Please choose a different username.")
-        else:
-            insert_user(new_username, new_password, new_email)
-            messagebox.showinfo("Success", "Registration successful!")
-            sign_up_window.destroy()
-            create_main_app()
-
-    sign_up_btn = tk.Button(sign_up_window, text="Sign Up", font=("Arial", 12), bg="#2196F3", fg="white", width=20, command=handle_sign_up)
-    sign_up_btn.pack(pady=20)
-
-    center_window(sign_up_window, 400, 400)
-    sign_up_window.mainloop()
-
-# Function for Sign In page
-def open_sign_in():
-    global sign_in_window
-    sign_in_window = tk.Tk()
-    sign_in_window.title("Sign In")
-    sign_in_window.configure(bg="#FAF9F6")
-
-    tk.Label(sign_in_window, text="Sign In", font=("Arial", 18, "bold"), bg="#FAF9F6").pack(pady=20)
-
-    tk.Label(sign_in_window, text="Username", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
-    user_username_entry = tk.Entry(sign_in_window, font=("Arial", 12), width=30)
-    user_username_entry.pack(pady=5)
-
-    tk.Label(sign_in_window, text="Password", font=("Arial", 12), bg="#FAF9F6").pack(pady=5)
-    user_password_entry = tk.Entry(sign_in_window, font=("Arial", 12), width=30, show="*")
-    user_password_entry.pack(pady=5)
-
-    def handle_user_sign_in():
-        username = user_username_entry.get()
-        password = user_password_entry.get()
-
-        if check_user_credentials(username, password):
-            messagebox.showinfo("Success", "Sign In successful!")
-            sign_in_window.destroy()
-            create_main_app()
-        else:
-            messagebox.showerror("Error", "Invalid credentials. Try again.")
-
-    sign_in_btn = tk.Button(sign_in_window, text="Sign In", font=("Arial", 12), bg="#FF5722", fg="white", width=20, command=handle_user_sign_in)
-    sign_in_btn.pack(pady=20)
-
-    center_window(sign_in_window, 400, 400)
-    sign_in_window.mainloop()
-
-# Main registration screen with options
-def create_registration_screen():
-    global reg_window
-    reg_window = tk.Tk()
-    reg_window.title("Book Store - Registration")
-    reg_window.configure(bg="#FAF9F6")
-
-    tk.Label(reg_window, text="Welcome To Our Book Store", font=("Arial", 18, "bold"), bg="#FAF9F6").pack(pady=20)
-
-    sign_in_btn = tk.Button(reg_window, text="Sign In", font=("Arial", 12), bg="#4CAF50", fg="white", width=20, command=open_sign_in)
-    sign_in_btn.pack(pady=20)
-
-    sign_up_btn = tk.Button(reg_window, text="Sign Up", font=("Arial", 12), bg="#2196F3", fg="white", width=20, command=open_sign_up)
-    sign_up_btn.pack(pady=20)
-
-    center_window(reg_window, 400, 300)
-    reg_window.mainloop()
 
 # Call this function to create the database at the beginning
 create_database()
-
 if __name__ == "__main__":
     # Start the registration screen
     create_registration_screen()

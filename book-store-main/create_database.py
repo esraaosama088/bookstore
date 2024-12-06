@@ -13,7 +13,8 @@ def create_database():
                         email TEXT,
                         balance REAL,
                         Purchase_Hist TEXT,
-                        Shipping_Addr TEXT
+                        Shipping_Addr TEXT,
+                        payment_method  TEXT
                         )''')
     cursor.execute('''
                     CREATE TABLE IF NOT EXISTS admins(
@@ -63,28 +64,28 @@ def create_database():
             FOREIGN KEY (ISBN) REFERENCES Books (ISBN),
             FOREIGN KEY (Customer_ID) REFERENCES Customers (Customer_ID)
         )
+                   
     ''')
-    # Create the settings table if it doesn't exist
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        first_name TEXT,
-        last_name TEXT,
-        password TEXT,
-        email TEXT
-    )
-    """)
+    # cursor.execute('''
+    # CREATE TABLE IF NOT EXISTS settings (
+        # id INTEGER PRIMARY KEY AUTOINCREMENT,
+        # first_name TEXT NOT NULL,
+        # last_name TEXT NOT NULL,
+        # email TEXT NOT NULL,
+        # password TEXT NOT NULL,
+        # username TEXT NOT NULL,
+        # phone_number TEXT,  -- New field
+        # country TEXT        -- New field
+    # )
+    # ''')
 
-# Create the payment methods table if it doesn't exist
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS payment_methods (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        method TEXT
-    )
-    """)
-   
-
-
+    # cursor.execute('''
+    # CREATE TABLE IF NOT EXISTS payment_methods (
+        # id INTEGER PRIMARY KEY AUTOINCREMENT,
+        # method TEXT NOT NULL
+    # )
+    # ''')
+    
     conn.commit()
     conn.close()
     

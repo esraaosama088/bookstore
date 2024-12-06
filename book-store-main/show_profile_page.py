@@ -11,11 +11,11 @@ def show_profile_page(main_frame, username="a"):
 
     # Profile Page Content
     profile_frame = tk.Frame(main_frame, bg="#FAF9F6")
-    profile_frame.pack(fill="both", expand=True, padx=20, pady=20)
+    profile_frame.pack(fill="both", expand=True)
 
     # User Image
     try:
-        user_img = Image.open("WhatsApp Image 2024-07-03 at 19.56.48_ae64950a.jpg").resize((100, 100))
+        user_img = Image.open("icons/user.png").resize((100, 100))
         user_img_tk = ImageTk.PhotoImage(user_img)
         user_img_label = tk.Label(profile_frame, image=user_img_tk, bg="#FAF9F6")
         user_img_label.image = user_img_tk  # Keep a reference to avoid garbage collection
