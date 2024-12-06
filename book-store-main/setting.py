@@ -5,18 +5,19 @@ import re  # For email validation
 from create_management_page import execute_query
 from global_var import user_instance
 # from  registration  import user 
-def get_user_data():
+def get_user_data(user_id):
     global user_instance
+    print(user_instance)
     # conn = connect_db()
     # cursor = conn.cursor()
     # cursor.execute("SELECT first_name, last_name, email, password, username, phone_number, country FROM settings WHERE id = 1")
     # user_data = cursor.fetchone()
     # conn.close()
-    query="SELECT username, password FROM users WHERE username  =?  "
+    query="SELECT username, password FROM users WHERE id  =?  "
     print("user=",user_instance)
-    return execute_query(query, (user_instance,))
+    return execute_query(query, (user_id,))
 
-def update_user_in_database( new_username, new_password ,id ):
+def update_user_in_database( new_username, new_password ,user_id ):
     # conn = connect_db()
     # cursor = conn.cursor()
     # cursor.execute("""
@@ -26,11 +27,11 @@ def update_user_in_database( new_username, new_password ,id ):
     # conn.commit()
     # conn.close()
      query="""UPDATE users  SET  username = ?, password = ? WHERE id = ?"""
-     return execute_query(query, (new_username,new_password,id))
+     return execute_query(query, (new_username,new_password, user_id))
 
 
 # UI functions for settings
-def show_settings_page(main_frame):
+def show_settings_page(main_frame, user_id):
     for widget in main_frame.winfo_children():
         widget.destroy()
 
@@ -40,13 +41,13 @@ def show_settings_page(main_frame):
     tk.Label(settings_frame, text="Settings", font=("Arial", 24, "bold"), bg="#FAF9F6", fg="#333").pack(pady=(10, 20))
     
     tk.Button(settings_frame, text="Update Username/Password", font=("Arial", 14), bg="#4CAF50", fg="white",
-              command=lambda: show_update_account_page(main_frame)).pack(fill="x", padx=10, pady=5)
+              command=lambda: show_update_account_page(main_frame, user_id)).pack(fill="x", padx=10, pady=5)
     tk.Button(settings_frame, text="Manage Payment Methods", font=("Arial", 14), bg="#4CAF50", fg="white",
               command=lambda: show_payment_methods_page(main_frame)).pack(fill="x", padx=10, pady=5)
     # tk.Button(settings_frame, text="View User Data", font=("Arial", 14), bg="#4CAF50", fg="white",
             #   command=show_user_data).pack(fill="x", padx=10, pady=5)
 
-def show_update_account_page(main_frame):
+def show_update_account_page(main_frame, user_id):
     for widget in main_frame.winfo_children():
         widget.destroy()
 
@@ -73,21 +74,21 @@ def show_update_account_page(main_frame):
     tk.Entry(update_frame, textvariable=new_password_var, show='*', font=("Arial", 12), bg="#FFFFFF").pack(anchor="w", padx=10, pady=(0, 10))
 
     tk.Button(update_frame, text="Save Changes", font=("Arial", 14), bg="#4CAF50", fg="white",
-              command=lambda: save_account_changes(old_username_var, old_password_var, new_username_var, new_password_var)).pack(pady=(20, 10), fill="x", padx=10)
+              command=lambda: save_account_changes(user_id, old_username_var, old_password_var, new_username_var, new_password_var)).pack(pady=(20, 10), fill="x", padx=10)
 
     tk.Button(update_frame, text="Back", font=("Arial", 14), bg="#FF5722", fg="white",
               command=lambda: show_settings_page(main_frame)).pack(pady=4, fill="x", padx=10)
 
-def save_account_changes(old_username_var, old_password_var, new_username_var, new_password_var):
+def save_account_changes(user_id, old_username_var, old_password_var, new_username_var, new_password_var):
     old_username = old_username_var.get()
     old_password = old_password_var.get()
     new_username = new_username_var.get()
     new_password = new_password_var.get()
-    var=get_user_data()
-    print(var)
-    current_user = var[0]
-    current_password = current_user[3] if current_user else None
-    current_username = current_user[4] if current_user else None
+    var=get_user_data(user_id)
+    current_user = var[0] # current_user = ('esraaosama', '123456789')
+
+    current_username = current_user[0] if current_user else None
+    current_password = current_user[1] if current_user else None
 
     # Check if all fields are filled
     if not all([old_username, old_password, new_username, new_password]):
@@ -111,7 +112,7 @@ def save_account_changes(old_username_var, old_password_var, new_username_var, n
     try:
         new_first_name, new_last_name = new_username.split(' ', 1) if ' ' in new_username else (new_username, '')
         
-        update_user_in_database( new_username, new_password,id)
+        update_user_in_database(new_username, new_password, user_id)
         
         messagebox.showinfo("Success", "Username and Password updated successfully!")
         show_home_page(new_username)  # Optionally redirect to the home page
@@ -191,13 +192,13 @@ def add_payment_method(method):
 
 
 
-def show_page(page_function, main_frame):
+def show_page(page_function, main_frame, user_id):
    
     
    
     for widget in main_frame.winfo_children():
         widget.destroy()  # Remove existing widgets
-    page_function(main_frame)
+    page_function(main_frame, user_id)
 
 # Main application loop
 if __name__ == "__main__":

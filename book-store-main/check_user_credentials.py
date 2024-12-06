@@ -13,12 +13,12 @@ def check_user_credentials(username, password):
         conn.close()
 
         if user:
-            return True  # User found and credentials are correct
+            return user[0]  # User found and credentials are correct
         else:
-            return False  # Invalid credentials
+            return None  # Invalid credentials
     except Exception as e:
         print(f"Error checking user credentials: {e}")
-        return False
+        return None
 
 
 
@@ -31,9 +31,9 @@ def check_admin_credentials(username,password,admin_key):
         conn.close()
         
         if admin:
-            return True
+            return admin[0]
         else:
-            return False
+            return None
     except Exception as e:
         print(f"Error checking admin credentials: {e}")
-        return False
+        return None

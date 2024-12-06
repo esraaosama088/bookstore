@@ -42,10 +42,10 @@ def handle_profile_click():
 
     show_profile_page(main_frames,user_instance)
 
-def create_main_app():
+def create_main_app(user_id):
     global main_frames
     global root
-    global user_instance
+
     root = tk.Tk()
     root.title("Book Store App")
     main_frames = tk.Frame(root)
@@ -62,7 +62,8 @@ def create_main_app():
     user_img_tk = ImageTk.PhotoImage(user_img)
     user_img_label = tk.Label(sidebar, image=user_img_tk, bg="#656D71")
     user_img_label.pack(pady=20)
-  
+    
+    print(user_instance)
     tk.Label(sidebar, text=user_instance, font=("Merriweather-Black", 14, "bold"), bg="#656D71",fg='white').pack()
     logout_btn = tk.Button(sidebar, text="LOG OUT", font=("Merriweather-Black", 10), bg="black", fg="white", relief="flat", command=log_out)
     logout_btn.pack(pady=10)
@@ -97,7 +98,7 @@ def create_main_app():
             activebackground='#656D71',
             command= lambda name = item['name']:show_profile_page(main_frame,user_instance) if name=='Profile' else(
                 show_home_page(main_frame) if name == 'Home' else(
-                    show_page(show_settings_page,main_frame) if name=='Settings' else(
+                    show_page(show_settings_page,main_frame, user_id) if name=='Settings' else(
                         show_cart_page(main_frame)if name=='Cart' else(
                             category(main_frame) if name== 'Categories' else None
                         )
@@ -224,11 +225,11 @@ def update_admin_key_field():
         admin_key_entry.pack_forget()  # Hide the Admin Key entry field
 
 # Function to navigate to the main app
-def open_main_app():
+def open_main_app(user_id):
     global current_window
     if current_window:
         current_window.destroy()
-    create_main_app()  # Open the main app
+    create_main_app(user_id)  # Open the main app
 
 # Function to handle sign-in
 # For Sign In
@@ -244,16 +245,19 @@ def handle_sign_in():
     role = role_var.get()
     
     if role == 'Admin':
-        if check_admin_credentials(username, password, admin_key):
+        admin_id = check_admin_credentials(username, password, admin_key)
+        if admin_id is not None:
             print("Admin Sign In successful")
+            # we should pass the admin_id to this function
             create_management_page()
         else:
             print("Invalid username or password. Try again.")
             messagebox.showerror("error", "Invalid credentials. Try again.")
     else:
-        if check_user_credentials(username, password):
+        user_id = check_user_credentials(username, password)
+        if user_id is not None:
             print("User Sign In successful")
-            open_main_app()
+            open_main_app(user_id)
         else:
             print("Invalid username or password. Try again.")
             messagebox.showerror("error", "Invalid credentials. Try again.")
